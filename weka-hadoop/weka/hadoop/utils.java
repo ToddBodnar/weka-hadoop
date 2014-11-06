@@ -22,6 +22,6 @@ public class utils {
 		    str += " " + Utils.joinOptions(((OptionHandler) c).getOptions());
         return str;
     }
-    public static final Log LOG = LogFactory.getLog(WekaExperimentInput.class);
+    public static final Log LOG = LogFactory.getLog(utils.class);
     
 }
