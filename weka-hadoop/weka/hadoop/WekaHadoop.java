@@ -35,7 +35,7 @@ public class WekaHadoop {
         job.setInputFormatClass(WekaExperimentInput.class);
         //job.setOutputFormatClass(WekaOutput.class);
         
-        WekaExperimentInput.setInfile(job, new File("/Users/hadoop/emotion_experiments_hadoop.exp"));
+        WekaExperimentInput.setInfile(job, new File(args[0]));
         
         FileOutputFormat.setOutputPath(job, new Path("/weka_results123"));
         
