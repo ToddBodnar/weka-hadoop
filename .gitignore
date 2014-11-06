@@ -1,3 +1,5 @@
 /nbproject/private/
 /build/
 /dist/
+/dist_hadoop/
+dist_hadoop/Weka_Hadoop.jar
