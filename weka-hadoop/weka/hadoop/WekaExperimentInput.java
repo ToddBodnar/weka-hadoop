@@ -28,12 +28,16 @@ import weka.classifiers.Classifier;
 import weka.experiment.Experiment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 
 /**
  *
  * @author toddbodnar
  */
-public class WekaExperimentInput <K, V> extends InputFormat<K, V>{
+public class WekaExperimentInput{
 
     
     static HashMap<JobContext, Experiment> settings = new HashMap<JobContext,Experiment>();
@@ -41,45 +45,48 @@ public class WekaExperimentInput <K, V> extends InputFormat<K, V>{
      * 
      * @param infile A weka experiment config file
      */
-    public static void setInfile(JobContext jc, File infile) throws Exception
+    public static void generateJobs(Configuration conf, Path indir, File experimentFile) throws Exception
     {
-        utils.LOG.info("Setting in file "+infile);
-        settings.put(jc,Experiment.read(infile.toString()));
-    }
-    @Override
-    public List<InputSplit> getSplits(JobContext jc) throws IOException, InterruptedException {
-        
-        Experiment exp = settings.get(jc);
-        
-        ArrayList<InputSplit> splits = new ArrayList<InputSplit>();
+        FileSystem fs = FileSystem.get(conf);
+        utils.LOG.info("Setting in file "+experimentFile);
+    
+        Experiment exp = Experiment.read(experimentFile.toString());
         
         Classifier properties[] = (Classifier[]) exp.getPropertyArray();
         
         exp.advanceCounters();
+        
+        long key_id = 1;
         
         while (exp.hasMoreIterations()) {
       
             //LOG.info(exp.getDatasets().get(exp.getCurrentDatasetNumber())+","+utils.classifierToString((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()))+","+exp.getCurrentRunNumber());
 	
             System.out.println(exp.getCurrentDatasetNumber()+","+exp.getCurrentPropertyNumber()+","+exp.getCurrentRunNumber());
-            splits.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber())));
+            //splits.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key));
+            
+            final Path file = new Path(indir, "part"+key_id);
+            final LongWritable key = new LongWritable(key_id);
+            
+            //final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, LongWritable.class, CompressionType.NONE);
+            final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
+        try {
+          writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id));
+        } finally {
+          writer.close();
+        }
+        //System.out.println("Wrote input for Map #"+i);
             
             exp.advanceCounters(); // Try to keep plowing through
-      
+            key_id++;
+            
+            if(key_id > 10) break; //for testing
         }
         
-        utils.LOG.info(splits.size()+" Jobs ");
-                
-        return splits;
+        
     }
 
-    @Override
-    public RecordReader<K, V> createRecordReader(InputSplit is, TaskAttemptContext tac) throws IOException, InterruptedException {
-        utils.LOG.info("a1");
-        RecordReader<K,V> r = new WekaRecordReader((WekaJob) is);
-        utils.LOG.info("a2");
-        return r;
-    }
+    
     
       public static void main(String args[]) throws Exception
     {
@@ -271,9 +278,9 @@ public class WekaExperimentInput <K, V> extends InputFormat<K, V>{
             }
         };
         
-        setInfile(jc,new File("/Users/toddbodnar/scratch/emotion_experiments.exp"));
+        //generateJobs(jc,new File("/Users/toddbodnar/scratch/emotion_experiments.exp"));
         
-        System.out.println((new WekaExperimentInput()).getSplits(jc).size());
+        //System.out.println((new WekaExperimentInput()).getSplits(jc).size());
         
     }
   

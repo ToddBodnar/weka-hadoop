@@ -16,21 +16,25 @@ import org.apache.hadoop.mapreduce.Mapper;
  *
  * @author toddbodnar
  */
-public class WekaMapper extends Mapper<LongWritable, WekaJob, WekaJob, WekaFoldResults>{
+//public class WekaMapper extends Mapper<LongWritable, WekaJob, WekaJob, WekaFoldResults>{
+
+public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResults>{
 
     @Override
     public void map(LongWritable key, WekaJob value, Context context) throws IOException, InterruptedException {
         utils.LOG.info("e1");
         System.out.println("I will now pretend to run "+value);
         
-        WekaFoldResults wfs = new WekaFoldResults();
+        WekaFoldResults wfs = new WekaFoldResults(value.toString());
         try {
             //todo: implement results
             Thread.sleep(10);
         } catch (InterruptedException ex) {
             Logger.getLogger(WekaMapper.class.getName()).log(Level.SEVERE, null, ex);
         }
-        context.write(value,wfs);
+        
+        //context.write(value,wfs);
+        context.write(new Text(value.toString()),wfs);
     }
 
     

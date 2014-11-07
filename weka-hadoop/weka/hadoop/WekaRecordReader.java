@@ -28,6 +28,7 @@ public class WekaRecordReader extends RecordReader{
         done = false;
         utils.LOG.info("f2");
         job = (WekaJob) is;
+        
     }
 
     @Override
@@ -46,7 +47,7 @@ public class WekaRecordReader extends RecordReader{
     public Object getCurrentKey() throws IOException, InterruptedException {
         utils.LOG.info("f4");
         done = true;
-        return job;
+        return job.getKey();
     }
 
     @Override
