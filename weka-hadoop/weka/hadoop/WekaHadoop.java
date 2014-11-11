@@ -29,6 +29,12 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 public class WekaHadoop {
     public static void main(String args[]) throws Exception
     {
+        if(args.length != 2)
+        {
+            System.out.println("Error! Needs two arguements (input file + output location)");
+            System.exit(-2);
+        }
+        
         //main based on PI example
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Weka-Hadoop");
@@ -82,7 +88,18 @@ public class WekaHadoop {
         WekaExperimentInput.generateJobs(conf, inDir, new File(args[0]));
 
 
+        if(job.waitForCompletion(true))
+        {
+            WekaReduce.convertToReadible(conf, outDir, new File(args[1]));
+            
+            fs.delete(tmpDir, true);
+        }
+        else
+        {
+            System.err.println("Error!");
+            System.exit(-1);
+        }
         
-        System.exit(job.waitForCompletion(true)?0:1);
+       
     }
 }

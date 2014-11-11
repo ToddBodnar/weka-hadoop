@@ -55,7 +55,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
     }
     public String toString()
     {
-        return (classifier==null?"null":classifier.toString()) + " on " + dataset==null?"null":dataset.toString();
+        return (classifier==null?"null":utils.classifierToString(classifier)) + " on " + (dataset==null?"null":dataset.toString());
     }
 
     @Override

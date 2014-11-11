@@ -23,9 +23,9 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
     @Override
     public void map(LongWritable key, WekaJob value, Context context) throws IOException, InterruptedException {
         utils.LOG.info("e1");
-        System.out.println("I will now pretend to run "+value);
+        System.out.println("I will now pretend to run "+value.toString());
         
-        WekaFoldResults wfs = new WekaFoldResults(value.toString());
+        WekaFoldResults wfs = new WekaFoldResults(utils.classifierToString(value.classifier)+" "+value.dataset+" "+value.key);
         try {
             //todo: implement results
             Thread.sleep(10);
@@ -34,7 +34,7 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
         }
         
         //context.write(value,wfs);
-        context.write(new Text(value.toString()),wfs);
+        context.write(new Text(value.toString()+"KEY"),wfs);
     }
 
     
