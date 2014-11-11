@@ -80,7 +80,7 @@ public class WekaExperimentInput{
             exp.advanceCounters(); // Try to keep plowing through
             key_id++;
             
-            if(key_id > 10) break; //for testing
+            if(key_id > 2) break; //for testing
         }
         
         
