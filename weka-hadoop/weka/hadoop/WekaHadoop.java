@@ -37,6 +37,11 @@ public class WekaHadoop {
         
         //main based on PI example
         Configuration conf = new Configuration();
+        
+        conf.addResource(new Path("conf/core-site.xml"));
+        conf.addResource(new Path("conf/mapred-site.xml"));
+        conf.addResource(new Path("conf/hdfs-site.xml"));
+        
         Job job = Job.getInstance(conf, "Weka-Hadoop");
         job.setJarByClass(WekaHadoop.class);
         //job.setNumReduceTasks(3);
@@ -76,6 +81,8 @@ public class WekaHadoop {
 
         final Path inDir = new Path(tmpDir, "in");
         final Path outDir = new Path(tmpDir, "out");
+        final Path datasetDir = new Path(tmpDir,"datasets");
+        
         FileInputFormat.setInputPaths(job, inDir);
         FileOutputFormat.setOutputPath(job, outDir);
 
@@ -88,7 +95,9 @@ public class WekaHadoop {
             throw new IOException("Cannot create input directory " + inDir);
         }
         
-        WekaExperimentInput.generateJobs(conf, inDir, new File(args[0]));
+        fs.mkdirs(datasetDir);
+        
+        WekaExperimentInput.generateJobs(conf, inDir, datasetDir, new File(args[0]));
 
 
         if(job.waitForCompletion(true))

@@ -19,6 +19,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -36,19 +38,26 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
     public File dataset;
     public long key;
     public int fold;
+    public String local;
     
-    public WekaJob(Classifier classifier, File dataset, long key, int fold)
+    public WekaJob(Classifier classifier, File dataset, Path local, long key, int fold)
     {
         //utils.LOG.info("d1");
         this.classifier = classifier;
         this.dataset = dataset;
         this.key = key;
         this.fold = fold;
+        this.local = local==null?"":local.toString();
     }
     
     public WekaJob()
     {
-        this(null,null,-1,1);
+        this(null,null,null,-1,1);
+    }
+    
+    public Path getLocal()
+    {
+        return new Path(local);
     }
     
     public LongWritable getKey()
@@ -96,6 +105,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
             this.classifier = thejob.classifier;
             this.dataset = thejob.dataset;
             this.fold = thejob.fold;
+            this.local = thejob.local;
             //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(WekaJob.class.getName()).log(Level.SEVERE, null, ex);

@@ -40,7 +40,7 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
             
             
             
-            Instances data = getInstances(value.dataset,context);
+            Instances data = getInstances(value,context);
             
             // based on CrossValidationSplitResultProducer.doRun(run)
             
@@ -84,16 +84,15 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
      * @param dataset
      * @return 
      */
-    private Instances getInstances(File dataset, Context context) throws IOException, Exception
+    private Instances getInstances(WekaJob job, Context context) throws IOException, Exception
     {
-        Path dataset_hdfs =new Path("hdfs://quickstart.cloudera:8020/user/cloudera/testdata.arff");
             FileSystem fs = FileSystem.get(context.getConfiguration());
             
-            
+            //Path dataset_hdfs =new Path("hdfs://quickstart.cloudera:8020/user/cloudera/testdata.arff");
                         
-            //ConverterUtils.DataSource source = new ConverterUtils.DataSource(value.dataset.toString());
+            //ConverterUtils.DataSource source = new ConverterUtils.DataSource(fs.open(dataset_hdfs));
             
-            ConverterUtils.DataSource source = new ConverterUtils.DataSource(fs.open(dataset_hdfs));
+            ConverterUtils.DataSource source = new ConverterUtils.DataSource(fs.open(job.getLocal()));
             
             
             Instances data = source.getDataSet();

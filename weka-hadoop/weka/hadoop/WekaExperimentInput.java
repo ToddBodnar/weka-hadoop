@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.DefaultListModel;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.RawComparator;
@@ -47,7 +48,7 @@ public class WekaExperimentInput{
      * 
      * @param infile A weka experiment config file
      */
-    public static void generateJobs(Configuration conf, Path indir, File experimentFile) throws Exception
+    public static void generateJobs(Configuration conf, Path indir, Path datasetHDFS, File experimentFile) throws Exception
     {
         FileSystem fs = FileSystem.get(conf);
         utils.LOG.info("Setting in file "+experimentFile);
@@ -56,6 +57,32 @@ public class WekaExperimentInput{
         exp.setAdvanceDataSetFirst(false);
         
         Classifier properties[] = (Classifier[]) exp.getPropertyArray();
+        
+        
+        DefaultListModel datasets = exp.getDatasets();
+        
+        
+        //fs.create(datasetHDFS);
+        
+        
+        
+        //fs.mkdirs(new Path(datasetHDFS,"data")); //hadoop throws a fit if I don't have this line, for some reason
+        
+        HashMap<Integer,Path> movedData = new HashMap<Integer,Path>();
+        
+        for(int ct=0;ct<datasets.size();ct++)
+        {
+            utils.LOG.info("Copying dataset "+datasets.get(ct).toString()+" to hdfs");
+            
+            Path dataHDFS = new Path(datasetHDFS,ct+".arff");
+            
+            fs.copyFromLocalFile(new Path(datasets.get(ct).toString()), dataHDFS);
+            
+            movedData.put(ct, dataHDFS);
+            //movedData.put(ct, null);
+            utils.LOG.info("Written to "+movedData.get(ct)+" ("+dataHDFS+")");
+            
+        }
         
         
         exp.advanceCounters();
@@ -78,7 +105,7 @@ public class WekaExperimentInput{
             for(int fold = 0; fold < 10; fold++)
             {
                 
-           jobs.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
+           jobs.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()), movedData.get(exp.getCurrentDatasetNumber()), key_id,fold));
             
           //writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
             
