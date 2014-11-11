@@ -54,6 +54,7 @@ public class WekaExperimentInput{
         
         Classifier properties[] = (Classifier[]) exp.getPropertyArray();
         
+        
         exp.advanceCounters();
         
         long key_id = 1;
@@ -65,15 +66,21 @@ public class WekaExperimentInput{
             System.out.println(exp.getCurrentDatasetNumber()+","+exp.getCurrentPropertyNumber()+","+exp.getCurrentRunNumber());
             //splits.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key));
             
-            final Path file = new Path(indir, "part"+key_id);
-            final LongWritable key = new LongWritable(key_id);
             
             //final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, LongWritable.class, CompressionType.NONE);
-            final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
-        try {
-          writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id));
-        } finally {
+                 try {
+            for(int fold = 0; fold < 10; fold++)
+            {
+                final Path file = new Path(indir, "part"+key_id+"fold"+fold);
+            final LongWritable key = new LongWritable(key_id);
+            
+                final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
+   
+          writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
           writer.close();
+            }
+        } finally {
+          
         }
         //System.out.println("Wrote input for Map #"+i);
             

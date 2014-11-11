@@ -29,22 +29,71 @@ import weka.core.converters.ConverterUtils;
 
 public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResults>{
 
-    public static Random random = new Random();
     @Override
     public void map(LongWritable key, WekaJob value, Context context) throws IOException, InterruptedException {
         try {
+            Random random = new Random(value.key);
+    
             utils.LOG.info("e1");
             System.out.println("I will now run "+value.toString());
             Classifier classifier = value.classifier;
             
-            Path dataset =new Path("hdfs://quickstart.cloudera:8020/user/cloudera/testdata.arff");
+            
+            
+            Instances data = getInstances(value.dataset,context);
+            
+            // based on CrossValidationSplitResultProducer.doRun(run)
+            
+            data.randomize(random);
+            if (data.classAttribute().isNominal()) {
+                data.stratify(10);
+            }
+     
+            // Just to make behaviour absolutely consistent with
+            // CrossValidationResultProducer
+            for (int tempFold = 0; tempFold < value.fold; tempFold++) {
+                data.trainCV(10, tempFold, random);
+            }
+
+            Instances train = data.trainCV(10, value.fold, random);
+            Instances test = data.testCV(10, value.fold);
+            
+            classifier.buildClassifier(train);
+
+             Evaluation eval;
+        
+            eval = new Evaluation(data);
+            eval.evaluateModel(classifier, test);
+            
+            
+            
+            
+            WekaFoldResults wfs = new WekaFoldResults(eval,train,test);
+            
+            
+            
+            //context.write(value,wfs);
+            context.write(new Text(utils.classifierToString(value.classifier)+","+value.dataset+","+value.key+","+value.fold),wfs);
+        } catch (Exception ex) {
+            Logger.getLogger(WekaMapper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Return the instances based on the dataset, possible cached
+     * @param dataset
+     * @return 
+     */
+    private Instances getInstances(File dataset, Context context) throws IOException, Exception
+    {
+        Path dataset_hdfs =new Path("hdfs://quickstart.cloudera:8020/user/cloudera/testdata.arff");
             FileSystem fs = FileSystem.get(context.getConfiguration());
             
             
                         
             //ConverterUtils.DataSource source = new ConverterUtils.DataSource(value.dataset.toString());
             
-            ConverterUtils.DataSource source = new ConverterUtils.DataSource(fs.open(dataset));
+            ConverterUtils.DataSource source = new ConverterUtils.DataSource(fs.open(dataset_hdfs));
             
             
             Instances data = source.getDataSet();
@@ -52,26 +101,8 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
             if(data.classIndex() < 0)
                 data.setClassIndex(data.numAttributes()-1);
             
-            classifier.buildClassifier(data);
-            
-             Evaluation eval;
-        
-            eval = new Evaluation(data);
-            eval.crossValidateModel(classifier, data, 10, random);
-            
-            String results = eval.toSummaryString();
-            
-            WekaFoldResults wfs = new WekaFoldResults(results);
-            
-            
-            
-            //context.write(value,wfs);
-            context.write(new Text(utils.classifierToString(value.classifier)+","+value.dataset+","+value.key),wfs);
-        } catch (Exception ex) {
-            Logger.getLogger(WekaMapper.class.getName()).log(Level.SEVERE, null, ex);
-        }
+           return data; 
     }
-
     
    
 }

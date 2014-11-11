@@ -35,18 +35,20 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
     public Classifier classifier;
     public File dataset;
     public long key;
+    public int fold;
     
-    public WekaJob(Classifier classifier, File dataset, long key)
+    public WekaJob(Classifier classifier, File dataset, long key, int fold)
     {
         utils.LOG.info("d1");
         this.classifier = classifier;
         this.dataset = dataset;
         this.key = key;
+        this.fold = fold;
     }
     
     public WekaJob()
     {
-        this(null,null,-1);
+        this(null,null,-1,1);
     }
     
     public LongWritable getKey()
@@ -55,7 +57,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
     }
     public String toString()
     {
-        return (classifier==null?"null":utils.classifierToString(classifier)) + " on " + (dataset==null?"null":dataset.toString());
+        return (classifier==null?"null":utils.classifierToString(classifier)) + " on " + (dataset==null?"null":dataset.toString()+" run "+key+" fold "+fold);
     }
 
     @Override
@@ -93,6 +95,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
             this.key = thejob.key;
             this.classifier = thejob.classifier;
             this.dataset = thejob.dataset;
+            this.fold = thejob.fold;
             //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         } catch (ClassNotFoundException ex) {
             Logger.getLogger(WekaJob.class.getName()).log(Level.SEVERE, null, ex);
