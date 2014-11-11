@@ -8,7 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -51,6 +53,7 @@ public class WekaExperimentInput{
         utils.LOG.info("Setting in file "+experimentFile);
     
         Experiment exp = Experiment.read(experimentFile.toString());
+        exp.setAdvanceDataSetFirst(false);
         
         Classifier properties[] = (Classifier[]) exp.getPropertyArray();
         
@@ -59,6 +62,8 @@ public class WekaExperimentInput{
         
         long key_id = 1;
         
+        int datasetnumber = exp.getCurrentDatasetNumber();
+        ArrayList<WekaJob> jobs = new ArrayList<WekaJob>();
         while (exp.hasMoreIterations()) {
       
             //LOG.info(exp.getDatasets().get(exp.getCurrentDatasetNumber())+","+utils.classifierToString((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()))+","+exp.getCurrentRunNumber());
@@ -66,34 +71,69 @@ public class WekaExperimentInput{
             System.out.println(exp.getCurrentDatasetNumber()+","+exp.getCurrentPropertyNumber()+","+exp.getCurrentRunNumber());
             //splits.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key));
             
-            
-            //final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, LongWritable.class, CompressionType.NONE);
-                 try {
+            final Path file = new Path(indir, "part"+key_id);
+            final LongWritable key = new LongWritable(key_id);
+            //final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
+        try {
             for(int fold = 0; fold < 10; fold++)
             {
-                final Path file = new Path(indir, "part"+key_id+"fold"+fold);
-            final LongWritable key = new LongWritable(key_id);
+                
+           jobs.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
             
-                final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
-   
-          writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
-          writer.close();
+          //writer.append(key, new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()),key_id,fold));
+            
             }
         } finally {
-          
+          //writer.close();
         }
         //System.out.println("Wrote input for Map #"+i);
             
-            exp.advanceCounters(); // Try to keep plowing through
+            exp.advanceCounters();
+            
+            if(datasetnumber != exp.getCurrentDatasetNumber()) 
+            {
+                //if there is a switch in the dataset number, save the current jobs to disk
+                //that is, keep jobs with the same dataset in the same map job, so they can be cached
+                flushJobs(jobs,datasetnumber,indir,conf);
+            }
+            datasetnumber = exp.getCurrentDatasetNumber();
             key_id++;
             
-            if(key_id > 2) break; //for testing
+            if(key_id > 50) break; //for testing
         }
         
+        flushJobs(jobs,datasetnumber,indir,conf);
         
     }
 
+    private static void flushJobs(ArrayList<WekaJob> jobs, int datasetnumber, Path indir, Configuration conf) throws IOException
+    {
+        if(jobs.isEmpty())
+            return;
+        Collections.shuffle(jobs);
+        
+        Iterator<WekaJob> i = jobs.iterator();
+        int key_id = 0;
+        int in_file = 0;
+        Path file = new Path(indir, "part"+datasetnumber+"_"+key_id);
+        SequenceFile.Writer writer = SequenceFile.createWriter( FileSystem.get(conf), conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
     
+            
+        while(i.hasNext())
+        {
+            if(in_file > NUM_MODELS_PER_JOB)
+            {
+                in_file = 0;
+                writer.close();
+                file = new Path(indir, "part"+datasetnumber+"_"+key_id);
+                writer = SequenceFile.createWriter( FileSystem.get(conf), conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
+            }
+            key_id++;
+            in_file++;
+            writer.append(new LongWritable(key_id), i.next());
+        }
+        writer.close();
+    }
     
       public static void main(String args[]) throws Exception
     {
@@ -291,4 +331,5 @@ public class WekaExperimentInput{
         
     }
   
+      public static final int NUM_MODELS_PER_JOB = 100;
 }

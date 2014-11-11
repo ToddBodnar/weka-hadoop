@@ -39,7 +39,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
     
     public WekaJob(Classifier classifier, File dataset, long key, int fold)
     {
-        utils.LOG.info("d1");
+        //utils.LOG.info("d1");
         this.classifier = classifier;
         this.dataset = dataset;
         this.key = key;
@@ -74,7 +74,7 @@ class WekaJob extends InputSplit implements Writable, Serializable, Comparable{
 
     @Override
     public void write(DataOutput d) throws IOException {
-        utils.LOG.info("d4");
+        //utils.LOG.info("d4");
         
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         ObjectOutput out = new ObjectOutputStream(bos);   

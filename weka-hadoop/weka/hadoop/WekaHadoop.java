@@ -39,7 +39,10 @@ public class WekaHadoop {
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "Weka-Hadoop");
         job.setJarByClass(WekaHadoop.class);
+        //job.setNumReduceTasks(3);
+        job.setNumReduceTasks(1);
 
+        
         //setup job conf
         job.setJobName("Weka-Hadoop");
         job.setJarByClass(WekaHadoop.class);
