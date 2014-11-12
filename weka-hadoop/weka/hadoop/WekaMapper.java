@@ -73,7 +73,7 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
             
             
             //context.write(value,wfs);
-            context.write(new Text(utils.classifierToString(value.classifier)+","+value.dataset+","+value.key+","+value.fold),wfs);
+            context.write(new Text("'"+value.dataset+"','"+value.key+"','"+value.fold+"','"+utils.classifierToString(value.classifier)+"','settings'"),wfs);
         } catch (Exception ex) {
             Logger.getLogger(WekaMapper.class.getName()).log(Level.SEVERE, null, ex);
         }
