@@ -126,7 +126,7 @@ public class WekaExperimentInput{
             datasetnumber = exp.getCurrentDatasetNumber();
             key_id++;
             
-            if(key_id > 50) break; //for testing
+            //if(key_id > 50) break; //for testing
         }
         
         flushJobs(jobs,datasetnumber,indir,conf);

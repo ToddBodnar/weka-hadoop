@@ -42,6 +42,9 @@ public class WekaHadoop {
         conf.addResource(new Path("conf/mapred-site.xml"));
         conf.addResource(new Path("conf/hdfs-site.xml"));
         
+        long timeoutMilliseconds = 1000*60*60*3; //3 hours, may need to change
+        conf.setLong("mapred.task.timeout", timeoutMilliseconds);
+        
         Job job = Job.getInstance(conf, "Weka-Hadoop");
         job.setJarByClass(WekaHadoop.class);
         //job.setNumReduceTasks(3);
