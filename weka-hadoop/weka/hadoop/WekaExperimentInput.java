@@ -160,6 +160,7 @@ public class WekaExperimentInput{
             writer.append(new LongWritable(key_id), i.next());
         }
         writer.close();
+        jobs.clear();
     }
     
       public static void main(String args[]) throws Exception
