@@ -102,7 +102,7 @@ public class WekaExperimentInput{
             final LongWritable key = new LongWritable(key_id);
             //final SequenceFile.Writer writer = SequenceFile.createWriter( fs, conf, file, LongWritable.class, WekaJob.class, CompressionType.NONE);
         try {
-            for(int fold = 0; fold < 10; fold++)
+            for(int fold = 0; fold <= 9; fold++)
             {
                 
            jobs.add(new WekaJob((Classifier) exp.getPropertyArrayValue(exp.getCurrentPropertyNumber()), (File) exp.getDatasets().get(exp.getCurrentDatasetNumber()), movedData.get(exp.getCurrentDatasetNumber()), key_id,fold));
