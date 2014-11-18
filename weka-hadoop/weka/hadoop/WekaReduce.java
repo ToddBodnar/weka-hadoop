@@ -90,10 +90,11 @@ public class WekaReduce  extends Reducer<Text, WekaFoldResults,LongWritable, Lon
       SequenceFile.Reader reader = new SequenceFile.Reader(fileSys,
           outFile, conf);
       
-      PrintWriter out = new PrintWriter(file);
+      PrintWriter out = new PrintWriter(file.toString()+"_unsorted");
       
       
-      out.println("Key_Dataset,Key_Run,Key_Fold,Key_Scheme,Key_Scheme_options,Key_Scheme_version_ID,Date_time,Number_of_training_instances,Number_of_testing_instances,Number_correct,Number_incorrect,Number_unclassified,Percent_correct,Percent_incorrect,Percent_unclassified,Kappa_statistic,Mean_absolute_error,Root_mean_squared_error,Relative_absolute_error,Root_relative_squared_error,SF_prior_entropy,SF_scheme_entropy,SF_entropy_gain,SF_mean_prior_entropy,SF_mean_scheme_entropy,SF_mean_entropy_gain,KB_information,KB_mean_information,KB_relative_information,True_positive_rate,Num_true_positives,False_positive_rate,Num_false_positives,True_negative_rate,Num_true_negatives,False_negative_rate,Num_false_negatives,IR_precision,IR_recall,F_measure,Matthews_correlation,Area_under_ROC,Area_under_PRC,Weighted_avg_true_positive_rate,Weighted_avg_false_positive_rate,Weighted_avg_true_negative_rate,Weighted_avg_false_negative_rate,Weighted_avg_IR_precision,Weighted_avg_IR_recall,Weighted_avg_F_measure,Weighted_avg_matthews_correlation,Weighted_avg_area_under_ROC,Weighted_avg_area_under_PRC,Unweighted_macro_avg_F_measure,Unweighted_micro_avg_F_measure,Elapsed_Time_training,Elapsed_Time_testing,UserCPU_Time_training,UserCPU_Time_testing,Serialized_Model_Size,Serialized_Train_Set_Size,Serialized_Test_Set_Size,Coverage_of_Test_Cases_By_Regions,Size_of_Predicted_Regions,Summary");
+      
+      out.println("Key_Run,Key_Fold,Key_Dataset,Key_Scheme,Key_Scheme_options,Key_Scheme_version_ID,Date_time,Number_of_training_instances,Number_of_testing_instances,Number_correct,Number_incorrect,Number_unclassified,Percent_correct,Percent_incorrect,Percent_unclassified,Kappa_statistic,Mean_absolute_error,Root_mean_squared_error,Relative_absolute_error,Root_relative_squared_error,SF_prior_entropy,SF_scheme_entropy,SF_entropy_gain,SF_mean_prior_entropy,SF_mean_scheme_entropy,SF_mean_entropy_gain,KB_information,KB_mean_information,KB_relative_information,True_positive_rate,Num_true_positives,False_positive_rate,Num_false_positives,True_negative_rate,Num_true_negatives,False_negative_rate,Num_false_negatives,IR_precision,IR_recall,F_measure,Matthews_correlation,Area_under_ROC,Area_under_PRC,Weighted_avg_true_positive_rate,Weighted_avg_false_positive_rate,Weighted_avg_true_negative_rate,Weighted_avg_false_negative_rate,Weighted_avg_IR_precision,Weighted_avg_IR_recall,Weighted_avg_F_measure,Weighted_avg_matthews_correlation,Weighted_avg_area_under_ROC,Weighted_avg_area_under_PRC,Unweighted_macro_avg_F_measure,Unweighted_micro_avg_F_measure,Elapsed_Time_training,Elapsed_Time_testing,UserCPU_Time_training,UserCPU_Time_testing,Serialized_Model_Size,Serialized_Train_Set_Size,Serialized_Test_Set_Size,Coverage_of_Test_Cases_By_Regions,Size_of_Predicted_Regions,Summary");
       
       Text key = new Text();
       Text value = new Text();
@@ -103,6 +104,25 @@ public class WekaReduce  extends Reducer<Text, WekaFoldResults,LongWritable, Lon
           out.println(key.toString().replaceAll("\"", "\\\"")+","+value.toString().replaceAll("\"", "\\\""));
       }
       out.close();
+      
+      
+      //sort so weka can actually read the results
+      Process sortOutput = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", "cat "+file.toString()+"_unsorted | perl -e 'print scalar <>, sort <>;' "+file.toString() });
+      int sortvalue = -99999;
+       try {
+           sortvalue = sortOutput.waitFor();
+       } catch (InterruptedException ex) {
+           Logger.getLogger(WekaReduce.class.getName()).log(Level.SEVERE, null, ex);
+       }
+      if(sortvalue != 0)
+      {
+          System.err.println("Error sorting:"+sortvalue);
+      }
+      else
+      {
+          (new File(file.toString()+"_unsorted")).delete();
+      }
+      
       
    }
    
