@@ -23,6 +23,10 @@ public class utils {
         return str;
     }
     public static final Log LOG = LogFactory.getLog(utils.class);
+
+    static String extraZeros(long key) {
+        return String.format("%06d", key);
+    }
     
     
 }

@@ -32,6 +32,7 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
     @Override
     public void map(LongWritable key, WekaJob value, Context context) throws IOException, InterruptedException {
         try {
+            Text resultskey = new Text(utils.extraZeros(value.key)+","+(1+value.fold)+",'"+value.dataset+"','"+utils.classifierToString(value.classifier)+"','settings'"); //need to do this before calculation, because weka seems to modify parameters (undocumented) for certain classifiers
             Random random = new Random(value.key);
     
             utils.LOG.info("e1");
@@ -73,7 +74,7 @@ public class WekaMapper extends Mapper<LongWritable, WekaJob, Text, WekaFoldResu
             
             
             //context.write(value,wfs);
-            context.write(new Text("'"+value.dataset+"','"+value.key+"','"+value.fold+"','"+utils.classifierToString(value.classifier)+"','settings'"),wfs);
+            context.write(resultskey,wfs);
         } catch (Exception ex) {
             Logger.getLogger(WekaMapper.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -107,7 +107,7 @@ public class WekaReduce  extends Reducer<Text, WekaFoldResults,LongWritable, Lon
       
       
       //sort so weka can actually read the results
-      Process sortOutput = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", "cat "+file.toString()+"_unsorted | perl -e 'print scalar <>, sort <>;' "+file.toString() });
+      Process sortOutput = Runtime.getRuntime().exec(new String[] { "/bin/bash", "-c", "cat "+file.toString()+"_unsorted | perl -e 'print scalar <>, sort <>;' > "+file.toString() });
       int sortvalue = -99999;
        try {
            sortvalue = sortOutput.waitFor();
