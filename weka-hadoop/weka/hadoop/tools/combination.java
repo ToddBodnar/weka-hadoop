@@ -20,7 +20,7 @@ public class combination {
     {
         Experiment exp = new Experiment(); //new Experiment doesn't actually init a new experiment...
         
-        File output = new File("/Users/toddbodnar/scratch/chris/vaccine_sentiment.exp");
+        File output = new File(args[0]);
         
         exp = Experiment.read(output.toString());//so load in another
         
